@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Ambiente virtual
+.venv/
+venv/
+
+# pytest e cobertura
+.pytest_cache/
+.coverage
+htmlcov/

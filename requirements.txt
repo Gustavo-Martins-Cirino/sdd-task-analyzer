@@ -1,0 +1,4 @@
+# Dependências autorizadas (CONTEXT_RULES 3.1.2): usadas SOMENTE em tests/.
+# O código de produção em src/ usa apenas a biblioteca padrão do Python.
+pytest==9.1.1
+pytest-cov==7.1.0
