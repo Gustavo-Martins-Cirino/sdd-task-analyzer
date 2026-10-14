@@ -12,10 +12,10 @@
 | Campo | Valor |
 |---|---|
 | Nome completo | Gustavo Martins Cirino |
-| Curso | [PREENCHER] |
-| Polo/Turma | [PREENCHER] |
-| E-mail institucional | [PREENCHER]@sempre.uniceub.edu.br |
-| Data de elaboração | [PREENCHER] |
+| Curso | Ciência da Computação |
+| Polo/Turma | Noturno |
+| E-mail institucional | cirinogustavom@sempreceub.com |
+| Data de elaboração | [14/10/2026 |
 | Versão da especificação | 1.0 |
 
 ## 1.2 Propósito do módulo TaskAnalyzer
