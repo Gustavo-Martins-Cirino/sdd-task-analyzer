@@ -15,6 +15,7 @@ conta, cada um com a regra que cobre na docstring.
 """
 
 import logging
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -248,6 +249,13 @@ FUSO_DE_BRASILIA = timezone(timedelta(hours=-3))
             nova_tarefa("", "pending", "low", utc(2026, 3, 2, 9)), "1.3.2", id="id-vazio"
         ),
         pytest.param(
+            nova_tarefa(
+                "V0", "pending", "low", utc(2026, 3, 2, 9), titulo=None  # type: ignore[arg-type]
+            ),
+            "1.3.2",
+            id="titulo-nao-texto",
+        ),
+        pytest.param(
             nova_tarefa("V1", "done", "low", utc(2026, 3, 2, 9)),  # type: ignore[arg-type]
             "1.3.2",
             id="status-fora-do-contrato",
@@ -381,3 +389,54 @@ def test_entrada_e_registrada_em_debug(
         registro.levelno == logging.DEBUG and registro.name == LOGGER_DO_MODULO
         for registro in caplog.records
     )
+
+
+# --- Homologação, ponto 4: casos de borda descobertos na revisão ---------------------------
+
+
+@pytest.mark.parametrize(
+    "funcao",
+    [
+        pytest.param(tempo_de_conclusao_min, id="tempo_de_conclusao_min"),
+        pytest.param(esta_atrasada, id="esta_atrasada"),
+    ],
+)
+def test_tempo_e_atraso_exigem_tarefa_concluida(
+    tarefa_t5: Tarefa, funcao: Callable[[Tarefa], float | bool]
+) -> None:
+    """Ponto 4: chamada direta com tarefa pendente vira ``TarefaInvalidaError`` (RN-01).
+
+    A especificação define as duas funções para "uma tarefa concluída" e não diz o que fazer
+    com outra. Sem esta regra, ``concluida_em - inicio`` com ``concluida_em = None`` deixaria
+    escapar um ``TypeError`` genérico — o que o ponto 4 da seção 4.2 reprova.
+    """
+    with pytest.raises(TarefaInvalidaError, match="T5"):
+        funcao(tarefa_t5)
+
+
+def test_titulo_vazio_e_aceito() -> None:
+    """Ponto 4: o contrato exige id não vazio (1.3.2), mas não restringe o título.
+
+    Comportamento não especificado, registrado aqui para que uma mudança futura seja
+    deliberada: proposta de regra para a especificação na Fase 3.
+    """
+    tarefa = nova_tarefa("B4", "pending", "low", utc(2026, 3, 2, 9), titulo="")
+
+    assert validar_tarefa(tarefa) is None
+
+
+def test_uma_unica_tarefa_concluida() -> None:
+    """Ponto 4: com uma só concluída, as médias são os valores dela, sem divisão por zero."""
+    unica = nova_tarefa(
+        "B6",
+        "completed",
+        "urgent",
+        utc(2026, 3, 2, 9),
+        prazo=utc(2026, 3, 2, 9, 30),
+        concluida_em=utc(2026, 3, 2, 9, 45),
+    )
+
+    relatorio = calcular_metricas([unica])
+
+    assert relatorio.tempo_medio_conclusao_min == 45.0
+    assert relatorio.taxa_atraso_pct == 100.0
